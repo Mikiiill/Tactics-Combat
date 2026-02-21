@@ -2,267 +2,228 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bump Game – 😊 chases 🐱</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bump Game</title>
     <style>
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            text-align: center;
-            background: #f9f9f9;
+            margin: 0;
             padding: 20px;
+            font-family: system-ui, sans-serif;
+            background: #f5f5f5;
+            text-align: center;
+            touch-action: manipulation; /* better mobile tapping */
         }
-        h1 { color: #222; margin-bottom: 0.8em; }
-        
-        .board-container {
-            display: inline-block;
-            margin: 0 auto 1.5em;
+        h1 {
+            font-size: 1.8rem;
+            margin: 0 0 1rem;
+            color: #333;
         }
-        
-        .grid {
+        #grid {
             display: grid;
-            grid-template-columns: 50px repeat(3, 110px);
-            grid-template-rows: 50px repeat(3, 110px);
-            gap: 6px;
-            font-size: 1.1rem;
-            font-weight: bold;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 360px;
+            margin: 0 auto 1.5rem;
         }
-        
-        .corner { background: transparent; border: none; }
-        .col-label { background: #e0e0e0; border: 1px solid #888; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
-        .row-label { background: #e0e0e0; border: 1px solid #888; border-radius: 6px; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; }
-        
         .cell {
+            aspect-ratio: 1 / 1;
+            background: white;
+            border: 3px solid #444;
+            border-radius: 16px;
             position: relative;
-            width: 110px;
-            height: 110px;
-            background: #fff;
-            border: 2px solid #555;
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: all 0.18s ease;
             overflow: hidden;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        
-        .cell:hover {
-            transform: scale(1.06);
+        .cell:hover, .cell:active {
+            transform: scale(1.05);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        
-        .cell.valid-move {
-            background: #e6ffe6 !important;
+        .cell.valid {
+            background: #d4f4d4 !important;
             border-color: #2e7d32;
         }
-        
-        .cell[data-emoji]::after {
-            content: attr(data-emoji);
+        .piece {
             position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 80px;
-            line-height: 1;
+            inset: 10%;
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
             pointer-events: none;
-            user-select: none;
-            z-index: 2;
-            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", emoji;
         }
-        
         #status {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: bold;
-            margin: 1.2em 0;
-            min-height: 2.2em;
+            margin: 1rem 0;
+            min-height: 2.5rem;
         }
-        
         button {
-            padding: 0.8em 1.8em;
+            padding: 12px 28px;
             font-size: 1.3rem;
             background: #1976d2;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
         }
-        button:hover { background: #1565c0; }
+        button:active {
+            background: #1565c0;
+        }
     </style>
 </head>
 <body>
 
-<h1>Bump Game – 3 bumps to win!</h1>
+<h1>Bump the Cat! (3 bumps = win)</h1>
 
-<div class="board-container">
-    <div class="grid">
-        <!-- Top row: empty + A B C -->
-        <div class="corner"></div>
-        <div class="col-label">A</div>
-        <div class="col-label">B</div>
-        <div class="col-label">C</div>
+<div id="grid"></div>
 
-        <!-- Row 1 -->
-        <div class="row-label">1</div>
-        <div class="cell" id="cell-0-0" data-row="0" data-col="0"></div>
-        <div class="cell" id="cell-0-1" data-row="0" data-col="1"></div>
-        <div class="cell" id="cell-0-2" data-row="0" data-col="2"></div>
-
-        <!-- Row 2 -->
-        <div class="row-label">2</div>
-        <div class="cell" id="cell-1-0" data-row="1" data-col="0"></div>
-        <div class="cell" id="cell-1-1" data-row="1" data-col="1"></div>
-        <div class="cell" id="cell-1-2" data-row="1" data-col="2"></div>
-
-        <!-- Row 3 -->
-        <div class="row-label">3</div>
-        <div class="cell" id="cell-2-0" data-row="2" data-col="0"></div>
-        <div class="cell" id="cell-2-1" data-row="2" data-col="1"></div>
-        <div class="cell" id="cell-2-2" data-row="2" data-col="2"></div>
-    </div>
-</div>
-
-<div id="status">😊 Your turn – Bumps: 0</div>
+<div id="status">Your turn – Bumps: 0</div>
 <button onclick="resetGame()">New Game</button>
 
 <script>
+const PLAYER_IMG = 'https://www.pngkey.com/png/detail/10-108281_emoji-smiley-face-png-smile-emoji-transparent.png';
+const CAT_IMG   = 'https://www.pngkey.com/png/detail/19-193912_download-cat-emoji-png-cat-emoji-png.png';
+
 const gridSize = 3;
-let playerPos = {row: 0, col: 0};   // A1 → row 0, col 0
-let opponentPos = {row: 1, col: 1}; // B2
+let playerPos = {r: 0, c: 0};
+let opponentPos = {r: 1, c: 1};
 let bumps = 0;
 let turn = 'player';
 
-function setEmoji(row, col, emoji = '') {
-    const cell = document.getElementById(`cell-\( {row}- \){col}`);
-    if (cell) cell.dataset.emoji = emoji;
-}
-
-function clearAllEmojis() {
+function createGrid() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
     for (let r = 0; r < gridSize; r++) {
         for (let c = 0; c < gridSize; c++) {
-            setEmoji(r, c, '');
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            cell.addEventListener('click', () => onClick(r, c));
+            grid.appendChild(cell);
         }
     }
+    updateGrid();
 }
 
-function updateBoard() {
-    clearAllEmojis();
-    setEmoji(playerPos.row, playerPos.col, '😊');
-    setEmoji(opponentPos.row, opponentPos.col, '🐱');
-
-    // Highlight valid moves
+function clearPieces() {
     document.querySelectorAll('.cell').forEach(cell => {
-        cell.classList.remove('valid-move');
+        cell.innerHTML = '';
+        cell.classList.remove('valid');
     });
+}
 
+function placePiece(r, c, src) {
+    const cell = document.querySelector(`.cell[data-r="\( {r}"][data-c=" \){c}"]`);
+    if (!cell) return;
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'piece';
+    img.alt = '';
+    img.draggable = false;
+    cell.appendChild(img);
+}
+
+function updateGrid() {
+    clearPieces();
+
+    placePiece(playerPos.r, playerPos.c, PLAYER_IMG);
+    placePiece(opponentPos.r, opponentPos.c, CAT_IMG);
+
+    // Highlight valid moves for player
     if (turn === 'player') {
         for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
                 if (dr === 0 && dc === 0) continue;
-                const nr = playerPos.row + dr;
-                const nc = playerPos.col + dc;
+                const nr = playerPos.r + dr;
+                const nc = playerPos.c + dc;
                 if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-                    const cell = document.getElementById(`cell-\( {nr}- \){nc}`);
-                    if (cell) cell.classList.add('valid-move');
+                    const cell = document.querySelector(`.cell[data-r="\( {nr}"][data-c=" \){nc}"]`);
+                    if (cell) cell.classList.add('valid');
                 }
             }
         }
     }
 
     document.getElementById('status').textContent = 
-        `${turn === 'player' ? '😊 Your' : '🐱 Opponent'} turn – Bumps: ${bumps}`;
+        `${turn === 'player' ? 'Your 😊' : 'Cat 🐱'} turn – Bumps: ${bumps}`;
 }
 
 function isAdjacent(r1, c1, r2, c2) {
-    const dr = Math.abs(r1 - r2);
-    const dc = Math.abs(c1 - c2);
-    return dr <= 1 && dc <= 1 && (dr + dc > 0);
+    return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1 && !(r1 === r2 && c1 === c2);
 }
 
-function handleClick(row, col) {
+function onClick(r, c) {
     if (turn !== 'player') return;
 
-    if (!isAdjacent(playerPos.row, playerPos.col, row, col)) {
-        alert("You can only move to an adjacent square (including diagonals).");
+    if (!isAdjacent(playerPos.r, playerPos.c, r, c)) {
+        // Optional: alert("Too far!");
         return;
     }
 
-    if (row === opponentPos.row && col === opponentPos.col) {
-        // Bump
+    if (r === opponentPos.r && c === opponentPos.c) {
         bumps++;
         if (bumps >= 3) {
-            alert("🎉 You win! 3 bumps achieved.");
+            alert("You win! 🎉 3 bumps!");
             resetGame();
             return;
         }
         turn = 'opponent';
-        updateBoard();
-        setTimeout(opponentTurn, 900);
+        updateGrid();
+        setTimeout(opponentTurn, 800);
     } else {
-        // Normal move
-        playerPos = {row, col};
+        playerPos = {r, c};
         turn = 'opponent';
-        updateBoard();
-        setTimeout(opponentTurn, 900);
+        updateGrid();
+        setTimeout(opponentTurn, 800);
     }
 }
 
 function opponentTurn() {
-    const possible = [];
+    const moves = [];
     for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
             if (dr === 0 && dc === 0) continue;
-            const nr = opponentPos.row + dr;
-            const nc = opponentPos.col + dc;
-            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-                // Check if empty (no player there)
-                if (!(nr === playerPos.row && nc === playerPos.col)) {
-                    possible.push({row: nr, col: nc});
-                }
+            const nr = opponentPos.r + dr;
+            const nc = opponentPos.c + dc;
+            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize &&
+                !(nr === playerPos.r && nc === playerPos.c)) {
+                moves.push({r: nr, c: nc});
             }
         }
     }
 
-    if (possible.length === 0) {
+    if (moves.length === 0) {
         turn = 'player';
-        updateBoard();
+        updateGrid();
         return;
     }
 
-    // Pick move farthest from player (Manhattan)
+    // Avoid player → max Manhattan distance
     let best = [];
-    let maxDist = -1;
-    possible.forEach(p => {
-        const d = Math.abs(p.row - playerPos.row) + Math.abs(p.col - playerPos.col);
-        if (d > maxDist) {
-            maxDist = d;
-            best = [p];
-        } else if (d === maxDist) {
-            best.push(p);
-        }
+    let maxD = -1;
+    moves.forEach(m => {
+        const d = Math.abs(m.r - playerPos.r) + Math.abs(m.c - playerPos.c);
+        if (d > maxD) { maxD = d; best = [m]; }
+        else if (d === maxD) best.push(m);
     });
 
-    const chosen = best[Math.floor(Math.random() * best.length)];
-    opponentPos = chosen;
+    const pick = best[Math.floor(Math.random() * best.length)];
+    opponentPos = pick;
     turn = 'player';
-    updateBoard();
+    updateGrid();
 }
 
 function resetGame() {
-    playerPos = {row: 0, col: 0};
-    opponentPos = {row: 1, col: 1};
+    playerPos = {r: 0, c: 0};
+    opponentPos = {r: 1, c: 1};
     bumps = 0;
     turn = 'player';
-    updateBoard();
+    updateGrid();
 }
 
-// Attach clicks
-document.querySelectorAll('.cell').forEach(cell => {
-    const r = parseInt(cell.dataset.row);
-    const c = parseInt(cell.dataset.col);
-    cell.addEventListener('click', () => handleClick(r, c));
-});
-
-// Initial render
-updateBoard();
+createGrid();
 </script>
 </body>
 </html>
