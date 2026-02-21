@@ -3,295 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bump Game 😊 vs 🐱</title>
+    <title>Bump Game – 😊 chases 🐱</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             text-align: center;
+            background: #f9f9f9;
             padding: 20px;
-            background-color: #f4f4f4;
         }
-        h1 {
-            margin-bottom: 20px;
-            color: #333;
+        h1 { color: #222; margin-bottom: 0.8em; }
+        
+        .board-container {
+            display: inline-block;
+            margin: 0 auto 1.5em;
         }
-        #labels {
+        
+        .grid {
             display: grid;
-            grid-template-columns: 40px repeat(3, 120px);
-            grid-template-rows: 40px;
-            gap: 10px;
-            margin: 0 auto 10px;
+            grid-template-columns: 50px repeat(3, 110px);
+            grid-template-rows: 50px repeat(3, 110px);
+            gap: 6px;
+            font-size: 1.1rem;
             font-weight: bold;
-            font-size: 18px;
         }
-        .label {
-            background-color: #ddd;
-            border: 2px solid #333;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .empty-label {
-            background-color: transparent;
-            border: none;
-        }
-        #grid {
-            display: grid;
-            grid-template-columns: 40px repeat(3, 120px);
-            grid-template-rows: repeat(3, 120px);
-            gap: 10px;
-            margin: 0 auto;
-        }
-        .row-label {
-            background-color: #ddd;
-            border: 2px solid #333;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 24px;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-        }
+        
+        .corner { background: transparent; border: none; }
+        .col-label { background: #e0e0e0; border: 1px solid #888; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .row-label { background: #e0e0e0; border: 1px solid #888; border-radius: 6px; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; }
+        
         .cell {
-            border: 2px solid #333;
-            border-radius: 10px;
+            position: relative;
+            width: 110px;
+            height: 110px;
+            background: #fff;
+            border: 2px solid #555;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            overflow: hidden;
+        }
+        
+        .cell:hover {
+            transform: scale(1.06);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .cell.valid-move {
+            background: #e6ffe6 !important;
+            border-color: #2e7d32;
+        }
+        
+        .cell[data-emoji]::after {
+            content: attr(data-emoji);
+            position: absolute;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 72px;
-            cursor: pointer;
-            background-color: #f8f8f8;
-            transition: all 0.2s ease;
-            font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', emoji;
+            font-size: 80px;
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+            z-index: 2;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", emoji;
         }
-        .cell:hover {
-            background-color: #e0e0e0;
-            transform: scale(1.05);
-        }
-        .cell.player-hover {
-            background-color: #aaffaa !important;
-            box-shadow: 0 0 10px #00ff00;
-        }
-        .cell.player {
-            background-color: #ffaaaa;
-        }
-        .cell.opponent {
-            background-color: #aaaaff;
-        }
+        
         #status {
-            margin-top: 30px;
-            font-size: 28px;
+            font-size: 1.6rem;
             font-weight: bold;
-            color: #333;
+            margin: 1.2em 0;
+            min-height: 2.2em;
         }
+        
         button {
-            margin-top: 20px;
-            padding: 12px 24px;
-            font-size: 20px;
-            background-color: #4CAF50;
+            padding: 0.8em 1.8em;
+            font-size: 1.3rem;
+            background: #1976d2;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
         }
-        button:hover {
-            background-color: #45a049;
-        }
-        #debug {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666;
-        }
+        button:hover { background: #1565c0; }
     </style>
 </head>
 <body>
-    <h1>Bump the Cat! Get 3 bumps to win 🐱</h1>
-    <div id="labels">
-        <div class="empty-label"></div>
-        <div class="label">A</div>
-        <div class="label">B</div>
-        <div class="label">C</div>
+
+<h1>Bump Game – 3 bumps to win!</h1>
+
+<div class="board-container">
+    <div class="grid">
+        <!-- Top row: empty + A B C -->
+        <div class="corner"></div>
+        <div class="col-label">A</div>
+        <div class="col-label">B</div>
+        <div class="col-label">C</div>
+
+        <!-- Row 1 -->
+        <div class="row-label">1</div>
+        <div class="cell" id="cell-0-0" data-row="0" data-col="0"></div>
+        <div class="cell" id="cell-0-1" data-row="0" data-col="1"></div>
+        <div class="cell" id="cell-0-2" data-row="0" data-col="2"></div>
+
+        <!-- Row 2 -->
+        <div class="row-label">2</div>
+        <div class="cell" id="cell-1-0" data-row="1" data-col="0"></div>
+        <div class="cell" id="cell-1-1" data-row="1" data-col="1"></div>
+        <div class="cell" id="cell-1-2" data-row="1" data-col="2"></div>
+
+        <!-- Row 3 -->
+        <div class="row-label">3</div>
+        <div class="cell" id="cell-2-0" data-row="2" data-col="0"></div>
+        <div class="cell" id="cell-2-1" data-row="2" data-col="1"></div>
+        <div class="cell" id="cell-2-2" data-row="2" data-col="2"></div>
     </div>
-    <div id="grid"></div>
-    <div id="status">😊 Your turn! - Bumps: 0</div>
-    <button onclick="resetGame()">New Game</button>
-    <div id="debug"></div>
+</div>
 
-    <script>
-        const gridSize = 3;
-        let playerPos = [0, 0]; // Row 0 = A1/A2/A3? Wait: rows top-to-bottom A=0 (1), B=1 (2), C=2 (3)
-        let opponentPos = [1, 1]; // B2
-        let bumps = 0;
-        let turn = 'player';
+<div id="status">😊 Your turn – Bumps: 0</div>
+<button onclick="resetGame()">New Game</button>
 
-        const PLAYER_EMOJI = '&#128522;'; // 😊
-        const OPPONENT_EMOJI = '&#128113;'; // 🐱
+<script>
+const gridSize = 3;
+let playerPos = {row: 0, col: 0};   // A1 → row 0, col 0
+let opponentPos = {row: 1, col: 1}; // B2
+let bumps = 0;
+let turn = 'player';
 
-        function initGrid() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            // Row labels A B C vertical on left
-            for (let r = 0; r < gridSize; r++) {
-                const rowLabel = document.createElement('div');
-                rowLabel.className = 'row-label';
-                rowLabel.textContent = String.fromCharCode(49 + r); // 1,2,3
-                grid.appendChild(rowLabel);
-                for (let c = 0; c < gridSize; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.id = `cell-\( {r}- \){c}`;
-                    cell.addEventListener('click', () => handleClick(r, c));
-                    grid.appendChild(cell);
+function setEmoji(row, col, emoji = '') {
+    const cell = document.getElementById(`cell-\( {row}- \){col}`);
+    if (cell) cell.dataset.emoji = emoji;
+}
+
+function clearAllEmojis() {
+    for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+            setEmoji(r, c, '');
+        }
+    }
+}
+
+function updateBoard() {
+    clearAllEmojis();
+    setEmoji(playerPos.row, playerPos.col, '😊');
+    setEmoji(opponentPos.row, opponentPos.col, '🐱');
+
+    // Highlight valid moves
+    document.querySelectorAll('.cell').forEach(cell => {
+        cell.classList.remove('valid-move');
+    });
+
+    if (turn === 'player') {
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                const nr = playerPos.row + dr;
+                const nc = playerPos.col + dc;
+                if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+                    const cell = document.getElementById(`cell-\( {nr}- \){nc}`);
+                    if (cell) cell.classList.add('valid-move');
                 }
             }
-            updateGrid();
-            debug('Grid initialized. Player at ' + playerPos + ', Opponent at ' + opponentPos);
         }
+    }
 
-        function updateGrid() {
-            // Clear all cells
-            for (let r = 0; r < gridSize; r++) {
-                for (let c = 0; c < gridSize; c++) {
-                    const cell = document.getElementById(`cell-\( {r}- \){c}`);
-                    if (cell) {
-                        cell.innerHTML = '';
-                        cell.className = 'cell';
-                        cell.classList.remove('player-hover', 'player', 'opponent');
-                    }
+    document.getElementById('status').textContent = 
+        `${turn === 'player' ? '😊 Your' : '🐱 Opponent'} turn – Bumps: ${bumps}`;
+}
+
+function isAdjacent(r1, c1, r2, c2) {
+    const dr = Math.abs(r1 - r2);
+    const dc = Math.abs(c1 - c2);
+    return dr <= 1 && dc <= 1 && (dr + dc > 0);
+}
+
+function handleClick(row, col) {
+    if (turn !== 'player') return;
+
+    if (!isAdjacent(playerPos.row, playerPos.col, row, col)) {
+        alert("You can only move to an adjacent square (including diagonals).");
+        return;
+    }
+
+    if (row === opponentPos.row && col === opponentPos.col) {
+        // Bump
+        bumps++;
+        if (bumps >= 3) {
+            alert("🎉 You win! 3 bumps achieved.");
+            resetGame();
+            return;
+        }
+        turn = 'opponent';
+        updateBoard();
+        setTimeout(opponentTurn, 900);
+    } else {
+        // Normal move
+        playerPos = {row, col};
+        turn = 'opponent';
+        updateBoard();
+        setTimeout(opponentTurn, 900);
+    }
+}
+
+function opponentTurn() {
+    const possible = [];
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = opponentPos.row + dr;
+            const nc = opponentPos.col + dc;
+            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+                // Check if empty (no player there)
+                if (!(nr === playerPos.row && nc === playerPos.col)) {
+                    possible.push({row: nr, col: nc});
                 }
             }
-            // Place player
-            const playerCell = document.getElementById(`cell-\( {playerPos[0]}- \){playerPos[1]}`);
-            if (playerCell) {
-                playerCell.innerHTML = PLAYER_EMOJI;
-                playerCell.classList.add('player');
-            }
-            // Place opponent
-            const opponentCell = document.getElementById(`cell-\( {opponentPos[0]}- \){opponentPos[1]}`);
-            if (opponentCell) {
-                opponentCell.innerHTML = OPPONENT_EMOJI;
-                opponentCell.classList.add('opponent');
-            }
-            // Highlight valid moves
-            if (turn === 'player') {
-                for (let dr = -1; dr <= 1; dr++) {
-                    for (let dc = -1; dc <= 1; dc++) {
-                        if (dr === 0 && dc === 0) continue;
-                        const nr = playerPos[0] + dr;
-                        const nc = playerPos[1] + dc;
-                        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-                            const targetCell = document.getElementById(`cell-\( {nr}- \){nc}`);
-                            if (targetCell) targetCell.classList.add('player-hover');
-                        }
-                    }
-                }
-            }
-            // Status
-            document.getElementById('status').innerHTML = `${turn === 'player' ? '😊 Your' : '🐱 Opponent\'s'} turn! - Bumps: ${bumps}`;
-            debug('Grid updated. Emojis placed.');
         }
+    }
 
-        function debug(msg) {
-            document.getElementById('debug').textContent = msg;
-            console.log(msg);
+    if (possible.length === 0) {
+        turn = 'player';
+        updateBoard();
+        return;
+    }
+
+    // Pick move farthest from player (Manhattan)
+    let best = [];
+    let maxDist = -1;
+    possible.forEach(p => {
+        const d = Math.abs(p.row - playerPos.row) + Math.abs(p.col - playerPos.col);
+        if (d > maxDist) {
+            maxDist = d;
+            best = [p];
+        } else if (d === maxDist) {
+            best.push(p);
         }
+    });
 
-        function isAdjacent(pos1, pos2) {
-            const dr = Math.abs(pos1[0] - pos2[0]);
-            const dc = Math.abs(pos1[1] - pos2[1]);
-            return (dr <= 1 && dc <= 1 && (dr + dc > 0));
-        }
+    const chosen = best[Math.floor(Math.random() * best.length)];
+    opponentPos = chosen;
+    turn = 'player';
+    updateBoard();
+}
 
-        function isEmpty(r, c) {
-            return !(r === playerPos[0] && c === playerPos[1]) && !(r === opponentPos[0] && c === opponentPos[1]);
-        }
+function resetGame() {
+    playerPos = {row: 0, col: 0};
+    opponentPos = {row: 1, col: 1};
+    bumps = 0;
+    turn = 'player';
+    updateBoard();
+}
 
-        function handleClick(r, c) {
-            if (turn !== 'player') {
-                debug('Not your turn!');
-                return;
-            }
-            debug(`Clicked \( {r}, \){c}`);
-            if (!isAdjacent(playerPos, [r, c])) {
-                alert('Must move adjacent (including diagonal)!');
-                return;
-            }
-            if (r === opponentPos[0] && c === opponentPos[1]) {
-                bumps++;
-                debug(`Bump! Total: ${bumps}`);
-                if (bumps >= 3) {
-                    alert('🎉 You win! 3 bumps!');
-                    resetGame();
-                    return;
-                }
-                turn = 'opponent';
-                updateGrid();
-                setTimeout(opponentTurn, 1000);
-            } else if (isEmpty(r, c)) {
-                playerPos = [r, c];
-                debug('Moved to ' + r + ',' + c);
-                turn = 'opponent';
-                updateGrid();
-                setTimeout(opponentTurn, 1000);
-            } else {
-                alert('Invalid!');
-            }
-        }
+// Attach clicks
+document.querySelectorAll('.cell').forEach(cell => {
+    const r = parseInt(cell.dataset.row);
+    const c = parseInt(cell.dataset.col);
+    cell.addEventListener('click', () => handleClick(r, c));
+});
 
-        function opponentTurn() {
-            debug('Opponent thinking...');
-            const possibleMoves = [];
-            for (let dr = -1; dr <= 1; dr++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                    if (dr === 0 && dc === 0) continue;
-                    const nr = opponentPos[0] + dr;
-                    const nc = opponentPos[1] + dc;
-                    if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize && isEmpty(nr, nc)) {
-                        possibleMoves.push([nr, nc]);
-                    }
-                }
-            }
-            if (possibleMoves.length === 0) {
-                debug('Opponent stuck!');
-                turn = 'player';
-                updateGrid();
-                return;
-            }
-            let maxDist = -1;
-            let bestMoves = [];
-            for (const move of possibleMoves) {
-                const dist = Math.abs(move[0] - playerPos[0]) + Math.abs(move[1] - playerPos[1]);
-                if (dist > maxDist) {
-                    maxDist = dist;
-                    bestMoves = [move];
-                } else if (dist === maxDist) {
-                    bestMoves.push(move);
-                }
-            }
-            const chosen = bestMoves[Math.floor(Math.random() * bestMoves.length)];
-            opponentPos = chosen;
-            debug('Opponent moved to ' + chosen);
-            turn = 'player';
-            updateGrid();
-        }
-
-        function resetGame() {
-            playerPos = [0, 0];
-            opponentPos = [1, 1];
-            bumps = 0;
-            turn = 'player';
-            updateGrid();
-            debug('New game started.');
-        }
-
-        // Auto-start
-        window.onload = function() {
-            initGrid();
-        };
-    </script>
+// Initial render
+updateBoard();
+</script>
 </body>
 </html>
