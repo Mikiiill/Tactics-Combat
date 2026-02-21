@@ -9,59 +9,58 @@
             margin: 0;
             padding: 20px;
             font-family: system-ui, sans-serif;
-            background: #f5f5f5;
+            background: #f0f0f0;
             text-align: center;
-            touch-action: manipulation; /* better mobile tapping */
+            touch-action: manipulation;
         }
         h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             margin: 0 0 1rem;
-            color: #333;
+            color: #222;
         }
         #grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            gap: 10px;
             max-width: 360px;
             margin: 0 auto 1.5rem;
         }
         .cell {
             aspect-ratio: 1 / 1;
-            background: white;
-            border: 3px solid #444;
+            background: #ffffff;
+            border: 3px solid #555;
             border-radius: 16px;
             position: relative;
             overflow: hidden;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+            transition: all 0.2s ease;
         }
-        .cell:hover, .cell:active {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        .cell:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
         .cell.valid {
-            background: #d4f4d4 !important;
-            border-color: #2e7d32;
+            background: #e0ffe0 !important;
+            border-color: #006400;
+            box-shadow: 0 0 0 4px #90ee90 inset;
         }
         .piece {
             position: absolute;
-            inset: 10%;
-            width: 80%;
-            height: 80%;
-            object-fit: contain;
+            inset: 12%;
+            width: 76%;
+            height: 76%;
             pointer-events: none;
         }
         #status {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: bold;
             margin: 1rem 0;
-            min-height: 2.5rem;
+            color: #333;
         }
         button {
-            padding: 12px 28px;
-            font-size: 1.3rem;
-            background: #1976d2;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            background: #1e88e5;
             color: white;
             border: none;
             border-radius: 12px;
@@ -74,7 +73,7 @@
 </head>
 <body>
 
-<h1>Bump the Cat! (3 bumps = win)</h1>
+<h1>Bump the Cat! (3 bumps to win)</h1>
 
 <div id="grid"></div>
 
@@ -82,8 +81,26 @@
 <button onclick="resetGame()">New Game</button>
 
 <script>
-const PLAYER_IMG = 'https://www.pngkey.com/png/detail/10-108281_emoji-smiley-face-png-smile-emoji-transparent.png';
-const CAT_IMG   = 'https://www.pngkey.com/png/detail/19-193912_download-cat-emoji-png-cat-emoji-png.png';
+// Inline SVG for smiley (player) - simple yellow face
+const PLAYER_SVG = `
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="48" fill="#ffdd00" stroke="#000" stroke-width="4"/>
+  <circle cx="35" cy="40" r="8" fill="#000"/>
+  <circle cx="65" cy="40" r="8" fill="#000"/>
+  <path d="M 30 65 Q 50 85 70 65" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+</svg>`;
+
+// Inline SVG for cat (opponent) - simple cat face
+const CAT_SVG = `
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="55" r="40" fill="#ff9900" stroke="#000" stroke-width="4"/>
+  <circle cx="35" cy="45" r="10" fill="#000"/>
+  <circle cx="65" cy="45" r="10" fill="#000"/>
+  <circle cx="38" cy="42" r="4" fill="#fff"/>
+  <circle cx="62" cy="42" r="4" fill="#fff"/>
+  <path d="M 30 30 L 20 10 M 70 30 L 80 10" stroke="#000" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 30 70 Q 50 90 70 70" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+</svg>`;
 
 const gridSize = 3;
 let playerPos = {r: 0, c: 0};
@@ -107,31 +124,31 @@ function createGrid() {
     updateGrid();
 }
 
-function clearPieces() {
+function updateGrid() {
     document.querySelectorAll('.cell').forEach(cell => {
         cell.innerHTML = '';
         cell.classList.remove('valid');
     });
-}
 
-function placePiece(r, c, src) {
-    const cell = document.querySelector(`.cell[data-r="\( {r}"][data-c=" \){c}"]`);
-    if (!cell) return;
-    const img = document.createElement('img');
-    img.src = src;
-    img.className = 'piece';
-    img.alt = '';
-    img.draggable = false;
-    cell.appendChild(img);
-}
+    // Place player
+    const pCell = document.querySelector(`.cell[data-r="\( {playerPos.r}"][data-c=" \){playerPos.c}"]`);
+    if (pCell) {
+        const div = document.createElement('div');
+        div.className = 'piece';
+        div.innerHTML = PLAYER_SVG;
+        pCell.appendChild(div);
+    }
 
-function updateGrid() {
-    clearPieces();
+    // Place opponent
+    const oCell = document.querySelector(`.cell[data-r="\( {opponentPos.r}"][data-c=" \){opponentPos.c}"]`);
+    if (oCell) {
+        const div = document.createElement('div');
+        div.className = 'piece';
+        div.innerHTML = CAT_SVG;
+        oCell.appendChild(div);
+    }
 
-    placePiece(playerPos.r, playerPos.c, PLAYER_IMG);
-    placePiece(opponentPos.r, opponentPos.c, CAT_IMG);
-
-    // Highlight valid moves for player
+    // Highlight valid moves
     if (turn === 'player') {
         for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
@@ -147,7 +164,7 @@ function updateGrid() {
     }
 
     document.getElementById('status').textContent = 
-        `${turn === 'player' ? 'Your 😊' : 'Cat 🐱'} turn – Bumps: ${bumps}`;
+        `${turn === 'player' ? 'Your turn (smiley)' : 'Cat\'s turn'} – Bumps: ${bumps}`;
 }
 
 function isAdjacent(r1, c1, r2, c2) {
@@ -156,11 +173,7 @@ function isAdjacent(r1, c1, r2, c2) {
 
 function onClick(r, c) {
     if (turn !== 'player') return;
-
-    if (!isAdjacent(playerPos.r, playerPos.c, r, c)) {
-        // Optional: alert("Too far!");
-        return;
-    }
+    if (!isAdjacent(playerPos.r, playerPos.c, r, c)) return;
 
     if (r === opponentPos.r && c === opponentPos.c) {
         bumps++;
@@ -171,12 +184,12 @@ function onClick(r, c) {
         }
         turn = 'opponent';
         updateGrid();
-        setTimeout(opponentTurn, 800);
+        setTimeout(opponentTurn, 700);
     } else {
         playerPos = {r, c};
         turn = 'opponent';
         updateGrid();
-        setTimeout(opponentTurn, 800);
+        setTimeout(opponentTurn, 700);
     }
 }
 
@@ -200,7 +213,6 @@ function opponentTurn() {
         return;
     }
 
-    // Avoid player → max Manhattan distance
     let best = [];
     let maxD = -1;
     moves.forEach(m => {
