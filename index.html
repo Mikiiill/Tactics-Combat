@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bump Game</title>
+    <title>Bump Game - 😊 vs 🐱</title>
     <style>
         body {
             margin: 0;
@@ -13,98 +13,73 @@
             text-align: center;
             touch-action: manipulation;
         }
-        h1 {
-            font-size: 1.6rem;
-            margin: 0 0 1rem;
-            color: #222;
-        }
+        h1 { font-size: 1.8rem; margin: 0 0 1rem; color: #222; }
         #grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            max-width: 360px;
+            gap: 12px;
+            max-width: 380px;
             margin: 0 auto 1.5rem;
         }
         .cell {
             aspect-ratio: 1 / 1;
-            background: #ffffff;
-            border: 3px solid #555;
-            border-radius: 16px;
+            background: #fff;
+            border: 4px solid #444;
+            border-radius: 18px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.18s ease;
         }
-        .cell:active {
-            transform: scale(0.96);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-        }
+        .cell:active { transform: scale(0.95); }
         .cell.valid {
-            background: #e0ffe0 !important;
+            background: #dfffdf !important;
             border-color: #006400;
-            box-shadow: 0 0 0 4px #90ee90 inset;
+            box-shadow: 0 0 0 5px #98fb98 inset;
         }
         .piece {
             position: absolute;
-            inset: 12%;
-            width: 76%;
-            height: 76%;
+            inset: 10%;
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
             pointer-events: none;
         }
         #status {
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             font-weight: bold;
             margin: 1rem 0;
             color: #333;
         }
         button {
-            padding: 12px 30px;
-            font-size: 1.2rem;
-            background: #1e88e5;
+            padding: 14px 32px;
+            font-size: 1.3rem;
+            background: #1976d2;
             color: white;
             border: none;
             border-radius: 12px;
             cursor: pointer;
         }
-        button:active {
-            background: #1565c0;
-        }
+        button:active { background: #1565c0; }
     </style>
 </head>
 <body>
 
-<h1>Bump the Cat! (3 bumps to win)</h1>
+<h1>Bump the Cat! 3 bumps to win</h1>
 
 <div id="grid"></div>
 
-<div id="status">Your turn – Bumps: 0</div>
+<div id="status">Your turn (😊) – Bumps: 0</div>
 <button onclick="resetGame()">New Game</button>
 
 <script>
-// Inline SVG for smiley (player) - simple yellow face
-const PLAYER_SVG = `
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="50" cy="50" r="48" fill="#ffdd00" stroke="#000" stroke-width="4"/>
-  <circle cx="35" cy="40" r="8" fill="#000"/>
-  <circle cx="65" cy="40" r="8" fill="#000"/>
-  <path d="M 30 65 Q 50 85 70 65" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/>
-</svg>`;
-
-// Inline SVG for cat (opponent) - simple cat face
-const CAT_SVG = `
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="50" cy="55" r="40" fill="#ff9900" stroke="#000" stroke-width="4"/>
-  <circle cx="35" cy="45" r="10" fill="#000"/>
-  <circle cx="65" cy="45" r="10" fill="#000"/>
-  <circle cx="38" cy="42" r="4" fill="#fff"/>
-  <circle cx="62" cy="42" r="4" fill="#fff"/>
-  <path d="M 30 30 L 20 10 M 70 30 L 80 10" stroke="#000" stroke-width="8" stroke-linecap="round"/>
-  <path d="M 30 70 Q 50 90 70 70" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"/>
-</svg>`;
+// Public HTTPS images (work on GitHub Pages / hosted)
+const PLAYER_IMG = 'https://em-content.zobj.net/source/noto-emoji-animations/344/smiling-face-with-smiling-eyes_1f60a.gif';  // animated emoji-style smiley
+const CAT_IMG    = 'https://em-content.zobj.net/source/noto-emoji-animations/344/cat-face_1f431.gif';  // animated cat emoji-style
 
 const gridSize = 3;
-let playerPos = {r: 0, c: 0};
-let opponentPos = {r: 1, c: 1};
+let playerPos = {r: 0, c: 0}; // top-left = A1
+let opponentPos = {r: 1, c: 1}; // center = B2
 let bumps = 0;
 let turn = 'player';
 
@@ -130,25 +105,27 @@ function updateGrid() {
         cell.classList.remove('valid');
     });
 
-    // Place player
+    // Place player 😊
     const pCell = document.querySelector(`.cell[data-r="\( {playerPos.r}"][data-c=" \){playerPos.c}"]`);
     if (pCell) {
-        const div = document.createElement('div');
-        div.className = 'piece';
-        div.innerHTML = PLAYER_SVG;
-        pCell.appendChild(div);
+        const img = document.createElement('img');
+        img.src = PLAYER_IMG;
+        img.className = 'piece';
+        img.alt = '😊';
+        pCell.appendChild(img);
     }
 
-    // Place opponent
+    // Place cat 🐱
     const oCell = document.querySelector(`.cell[data-r="\( {opponentPos.r}"][data-c=" \){opponentPos.c}"]`);
     if (oCell) {
-        const div = document.createElement('div');
-        div.className = 'piece';
-        div.innerHTML = CAT_SVG;
-        oCell.appendChild(div);
+        const img = document.createElement('img');
+        img.src = CAT_IMG;
+        img.className = 'piece';
+        img.alt = '🐱';
+        oCell.appendChild(img);
     }
 
-    // Highlight valid moves
+    // Green highlights for valid moves
     if (turn === 'player') {
         for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
@@ -164,11 +141,13 @@ function updateGrid() {
     }
 
     document.getElementById('status').textContent = 
-        `${turn === 'player' ? 'Your turn (smiley)' : 'Cat\'s turn'} – Bumps: ${bumps}`;
+        `${turn === 'player' ? 'Your turn 😊' : 'Cat\'s turn 🐱'} – Bumps: ${bumps}`;
 }
 
 function isAdjacent(r1, c1, r2, c2) {
-    return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1 && !(r1 === r2 && c1 === c2);
+    const dr = Math.abs(r1 - r2);
+    const dc = Math.abs(c1 - c2);
+    return dr <= 1 && dc <= 1 && !(r1 === r2 && c1 === c2);
 }
 
 function onClick(r, c) {
@@ -178,18 +157,18 @@ function onClick(r, c) {
     if (r === opponentPos.r && c === opponentPos.c) {
         bumps++;
         if (bumps >= 3) {
-            alert("You win! 🎉 3 bumps!");
+            alert("You win! 🎉 3 bumps on the cat!");
             resetGame();
             return;
         }
         turn = 'opponent';
         updateGrid();
-        setTimeout(opponentTurn, 700);
+        setTimeout(opponentTurn, 800);
     } else {
         playerPos = {r, c};
         turn = 'opponent';
         updateGrid();
-        setTimeout(opponentTurn, 700);
+        setTimeout(opponentTurn, 800);
     }
 }
 
@@ -213,6 +192,7 @@ function opponentTurn() {
         return;
     }
 
+    // Cat tries to run away (max distance)
     let best = [];
     let maxD = -1;
     moves.forEach(m => {
