@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Catch the Cat! 3 bumps to win</title>
+    <title>Catch the Cat!</title>
     <style>
         body {
             margin: 0;
@@ -35,23 +35,52 @@
         .cell.valid { background: #dfffdf !important; border-color: #006400; }
         #player-piece, #cat-piece {
             position: absolute;
-            width: 24%;               /* fits nicely inside cell */
-            height: 24%;
+            width: 20%;
+            height: 20%;
             object-fit: contain;
             transition: top 0.4s ease, left 0.4s ease;
             pointer-events: none;
             z-index: 10;
         }
         #status { font-size: 1.6rem; font-weight: bold; margin: 1rem 0; color: #333; }
+        #mana { font-size: 1.3rem; margin: 0.5rem 0; color: #1976d2; }
         button {
-            padding: 14px 32px;
-            font-size: 1.3rem;
+            padding: 12px 24px;
+            font-size: 1.2rem;
             background: #1976d2;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 8px;
         }
         button:active { background: #1565c0; }
+        button:disabled { background: #aaa; cursor: not-allowed; }
+        #skills-panel {
+            display: none;
+            background: white;
+            border: 3px solid #444;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px auto;
+            max-width: 340px;
+        }
+        .skill-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 1.1rem;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .skill-btn:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -65,17 +94,31 @@
 </div>
 
 <div id="status">Your turn 😊 – Bumps: 0</div>
-<button onclick="resetGame()">New Game</button>
+<div id="mana">Mana: 0</div>
+
+<div id="controls">
+    <button id="skills-btn" onclick="showSkills()" disabled>Skills</button>
+    <button onclick="resetGame()">New Game</button>
+</div>
+
+<div id="skills-panel">
+    <h3>Skills (Cost / Effect)</h3>
+    <button class="skill-btn" id="reach-btn" onclick="useReach()">Reach (2 mana)<br>2 range bump</button>
+    <button onclick="hideSkills()">Close</button>
+</div>
 
 <script>
 const gridSize = 3;
 let playerPos = {r: 0, c: 0};
 let opponentPos = {r: 1, c: 1};
 let bumps = 0;
+let mana = 0;
 let turn = 'player';
 
 const playerImg = document.getElementById('player-piece');
 const catImg = document.getElementById('cat-piece');
+const skillsBtn = document.getElementById('skills-btn');
+const reachBtn = document.getElementById('reach-btn');
 
 function initGrid() {
     const grid = document.getElementById('grid');
@@ -91,6 +134,7 @@ function initGrid() {
         }
     }
     updatePositions();
+    updateUI();
 }
 
 function updatePositions() {
@@ -100,7 +144,6 @@ function updatePositions() {
     const cellWidth = gridRect.width / gridSize;
     const cellHeight = gridRect.height / gridSize;
 
-    
     const offsetX = cellWidth * 0.1;
     const offsetY = cellHeight * 0.1;
 
@@ -116,12 +159,13 @@ function highlightValid() {
     if (turn !== 'player') return;
     for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
-            if (dr === 0 && dc === 0) continue;
-            const nr = playerPos.r + dr;
-            const nc = playerPos.c + dc;
-            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-                const cell = document.querySelector(`.cell[data-r="\( {nr}"][data-c=" \){nc}"]`);
-                if (cell) cell.classList.add('valid');
+            if (dr === 0 || dc === 0) {
+                const nr = playerPos.r + dr;
+                const nc = playerPos.c + dc;
+                if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+                    const cell = document.querySelector(`.cell[data-r="\( {nr}"][data-c=" \){nc}"]`);
+                    if (cell) cell.classList.add('valid');
+                }
             }
         }
     }
@@ -132,10 +176,13 @@ function updateUI() {
     highlightValid();
     document.getElementById('status').textContent = 
         `${turn === 'player' ? 'Your turn 😊' : 'Cat turn 🐱'} – Bumps: ${bumps}`;
+    document.getElementById('mana').textContent = `Mana: ${mana}`;
+    skillsBtn.disabled = turn !== 'player';
+    reachBtn.disabled = mana < 2;
 }
 
 function isAdjacent(r1, c1, r2, c2) {
-    return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1 && !(r1 === r2 && c1 === c2);
+    return (Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1);
 }
 
 function handleClick(r, c) {
@@ -145,45 +192,109 @@ function handleClick(r, c) {
     if (r === opponentPos.r && c === opponentPos.c) {
         bumps++;
         if (bumps >= 3) {
-            alert('You win! 🎉 3 bumps!');
+            alert('Caught the Cat! 🎉 3 bumps!');
             resetGame();
             return;
         }
         turn = 'opponent';
+        mana++;
         updateUI();
         setTimeout(opponentTurn, 600);
     } else {
         playerPos = {r, c};
         turn = 'opponent';
+        mana++;
         updateUI();
         setTimeout(opponentTurn, 600);
     }
 }
 
+function showSkills() {
+    document.getElementById('skills-panel').style.display = 'block';
+}
+
+function hideSkills() {
+    document.getElementById('skills-panel').style.display = 'none';
+}
+
+function useReach() {
+    if (mana < 2) return;
+    hideSkills();
+
+    const possible = [];
+    const dirs = [[0,2],[0,-2],[2,0],[-2,0]];
+
+    dirs.forEach(d => {
+        const nr = playerPos.r + d[0];
+        const nc = playerPos.c + d[1];
+        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+            possible.push({r:nr, c:nc});
+        }
+    });
+
+    const knightDirs = [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]];
+    knightDirs.forEach(d => {
+        const nr = playerPos.r + d[0];
+        const nc = playerPos.c + d[1];
+        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+            possible.push({r:nr, c:nc});
+        }
+    });
+
+    if (possible.length === 0) {
+        alert("No valid Reach targets!");
+        return;
+    }
+
+    document.querySelectorAll('.cell').forEach(cell => {
+        cell.classList.remove('valid');
+        const cr = parseInt(cell.dataset.r);
+        const cc = parseInt(cell.dataset.c);
+        if (possible.some(p => p.r === cr && p.c === cc)) {
+            cell.classList.add('valid');
+            cell.onclick = () => {
+                if (cr === opponentPos.r && cc === opponentPos.c) {
+                    bumps++;
+                    if (bumps >= 3) {
+                        alert('You win! 🎉 3 bumps!');
+                        resetGame();
+                        return;
+                    }
+                }
+                mana -= 2;
+                turn = 'opponent';
+                updateUI();
+                setTimeout(opponentTurn, 600);
+            };
+        }
+    });
+}
+
 function opponentTurn() {
     const moves = [];
-    for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-            if (dr === 0 && dc === 0) continue;
-            const nr = opponentPos.r + dr;
-            const nc = opponentPos.c + dc;
-            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize &&
-                !(nr === playerPos.r && nc === playerPos.c)) {
-                moves.push({r: nr, c: nc});
-            }
+    const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+    dirs.forEach(d => {
+        const nr = opponentPos.r + d[0];
+        const nc = opponentPos.c + d[1];
+        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize &&
+            !(nr === playerPos.r && nc === playerPos.c)) {
+            moves.push({r:nr, c:nc});
         }
-    }
+    });
+
     if (moves.length === 0) {
         turn = 'player';
         updateUI();
         return;
     }
+
     let best = [], maxD = -1;
     moves.forEach(m => {
         const d = Math.abs(m.r - playerPos.r) + Math.abs(m.c - playerPos.c);
         if (d > maxD) { maxD = d; best = [m]; }
         else if (d === maxD) best.push(m);
     });
+
     opponentPos = best[Math.floor(Math.random() * best.length)];
     turn = 'player';
     updateUI();
@@ -193,11 +304,11 @@ function resetGame() {
     playerPos = {r: 0, c: 0};
     opponentPos = {r: 1, c: 1};
     bumps = 0;
+    mana = 0;
     turn = 'player';
     updateUI();
 }
 
-// Start game
 initGrid();
 updateUI();
 window.addEventListener('resize', updatePositions);
