@@ -215,6 +215,8 @@ function showSkills() {
 
 function hideSkills() {
     document.getElementById('skills-panel').style.display = 'none';
+    document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('valid'));
+    updateUI();
 }
 
 function useReach() {
@@ -222,9 +224,10 @@ function useReach() {
     hideSkills();
 
     const possible = [];
-    const dirs = [[0,2],[0,-2],[2,0],[-2,0]];
 
-    dirs.forEach(d => {
+    // Straight 2 squares (up/down/left/right)
+    const straight = [[0,2],[0,-2],[2,0],[-2,0]];
+    straight.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -232,8 +235,9 @@ function useReach() {
         }
     });
 
-    const knightDirs = [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]];
-    knightDirs.forEach(d => {
+    // Knight moves (1 then orthogonal)
+    const knight = [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]];
+    knight.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -256,7 +260,7 @@ function useReach() {
                 if (cr === opponentPos.r && cc === opponentPos.c) {
                     bumps++;
                     if (bumps >= 3) {
-                        alert('You win! 🎉 3 bumps!');
+                        alert('Caught the Cat! 🎉 3 bumps!');
                         resetGame();
                         return;
                     }
