@@ -236,7 +236,7 @@ function useReach() {
     });
 
     // Knight moves (1 then orthogonal)
-    const knight = [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]];
+    const knight = [[1,1],[1,-1],[-1,1],[-1,-1]];
     knight.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
