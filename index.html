@@ -215,7 +215,12 @@ function showSkills() {
 
 function hideSkills() {
     document.getElementById('skills-panel').style.display = 'none';
-    document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('valid'));
+    document.querySelectorAll('.cell').forEach(cell => {
+        cell.classList.remove('valid');
+        const newCell = cell.cloneNode(true);
+        cell.parentNode.replaceChild(newCell, cell);
+        newCell.addEventListener('click', () => handleClick(parseInt(newCell.dataset.r), parseInt(newCell.dataset.c)));
+    });
     updateUI();
 }
 
@@ -234,7 +239,6 @@ function useReach() {
         }
     });
 
-    
     const knight = [[1,1],[1,-1],[-1,1],[-1,-1]];
     knight.forEach(d => {
         const nr = playerPos.r + d[0];
@@ -255,7 +259,7 @@ function useReach() {
         const cc = parseInt(cell.dataset.c);
         if (possible.some(p => p.r === cr && p.c === cc)) {
             cell.classList.add('valid');
-            cell.onclick = () => {
+            const handler = () => {
                 if (cr === opponentPos.r && cc === opponentPos.c) {
                     bumps++;
                     if (bumps >= 3) {
@@ -268,7 +272,9 @@ function useReach() {
                 turn = 'opponent';
                 updateUI();
                 setTimeout(opponentTurn, 600);
+                cell.removeEventListener('click', handler);
             };
+            cell.addEventListener('click', handler);
         }
     });
 }
