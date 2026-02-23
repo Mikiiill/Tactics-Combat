@@ -215,7 +215,12 @@ function showSkills() {
 
 function hideSkills() {
     document.getElementById('skills-panel').style.display = 'none';
-    document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('valid'));
+    document.querySelectorAll('.cell').forEach(cell => {
+        cell.classList.remove('valid');
+        const newCell = cell.cloneNode(true);
+        cell.parentNode.replaceChild(newCell, cell);
+        newCell.addEventListener('click', () => handleClick(parseInt(newCell.dataset.r), parseInt(newCell.dataset.c)));
+    });
     updateUI();
 }
 
@@ -225,9 +230,8 @@ function useReach() {
 
     const possible = [];
 
-    // Straight 2 squares (up/down/left/right)
-    const straight = [[0,2],[0,-2],[2,0],[-2,0]];
-    straight.forEach(d => {
+    const oneStep = [[0,1],[0,-1],[1,0],[-1,0]];
+    oneStep.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -235,9 +239,8 @@ function useReach() {
         }
     });
 
-    // Knight moves (1 then orthogonal)
-    const knight = [[1,1],[1,-1],[-1,1],[-1,-1]];
-    knight.forEach(d => {
+    const twoStep = [[0,2],[0,-2],[2,0],[-2,0]];
+    twoStep.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -245,7 +248,28 @@ function useReach() {
         }
     });
 
-    if (possible.length === 0) {
+    const shortL = [
+        [1,1], [1,-1], [-1,1], [-1,-1]
+    ];
+    shortL.forEach(d => {
+        const nr = playerPos.r + d[0];
+        const nc = playerPos.c + d[1];
+        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+            possible.push({r:nr, c:nc});
+        }
+    });
+
+    const unique = [];
+    const seen = new Set();
+    possible.forEach(p => {
+        const key = `\( {p.r}, \){p.c}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(p);
+        }
+    });
+
+    if (unique.length === 0) {
         alert("No valid Reach targets!");
         return;
     }
@@ -254,9 +278,9 @@ function useReach() {
         cell.classList.remove('valid');
         const cr = parseInt(cell.dataset.r);
         const cc = parseInt(cell.dataset.c);
-        if (possible.some(p => p.r === cr && p.c === cc)) {
+        if (unique.some(p => p.r === cr && p.c === cc)) {
             cell.classList.add('valid');
-            cell.onclick = () => {
+            const handler = () => {
                 if (cr === opponentPos.r && cc === opponentPos.c) {
                     bumps++;
                     if (bumps >= 3) {
@@ -269,7 +293,9 @@ function useReach() {
                 turn = 'opponent';
                 updateUI();
                 setTimeout(opponentTurn, 600);
+                cell.removeEventListener('click', handler);
             };
+            cell.addEventListener('click', handler);
         }
     });
 }
