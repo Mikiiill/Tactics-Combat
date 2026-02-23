@@ -225,9 +225,9 @@ function useReach() {
 
     const possible = [];
 
-    // 1 step orthogonal
-    const oneStep = [[0,1],[0,-1],[1,0],[-1,0]];
-    oneStep.forEach(d => {
+    // Straight 2 squares (up/down/left/right)
+    const straight = [[0,2],[0,-2],[2,0],[-2,0]];
+    straight.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -235,9 +235,9 @@ function useReach() {
         }
     });
 
-    // 2 steps straight orthogonal
-    const twoStep = [[0,2],[0,-2],[2,0],[-2,0]];
-    twoStep.forEach(d => {
+    // Knight moves (1 then orthogonal)
+    const knight = [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]];
+    knight.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -245,32 +245,7 @@ function useReach() {
         }
     });
 
-    // Short L: exactly 1 orthogonal + 1 side orthogonal (true 2-range L shape)
-    const shortL = [
-        [1,1], [1,-1], [-1,1], [-1,-1],
-        [2,1], [2,-1], [-2,1], [-2,-1],
-        [1,2], [1,-2], [-1,2], [-1,-2]
-    ];
-    shortL.forEach(d => {
-        const nr = playerPos.r + d[0];
-        const nc = playerPos.c + d[1];
-        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-            possible.push({r:nr, c:nc});
-        }
-    });
-
-    // Deduplicate
-    const unique = [];
-    const seen = new Set();
-    possible.forEach(p => {
-        const key = `\( {p.r}, \){p.c}`;
-        if (!seen.has(key)) {
-            seen.add(key);
-            unique.push(p);
-        }
-    });
-
-    if (unique.length === 0) {
+    if (possible.length === 0) {
         alert("No valid Reach targets!");
         return;
     }
@@ -279,7 +254,7 @@ function useReach() {
         cell.classList.remove('valid');
         const cr = parseInt(cell.dataset.r);
         const cc = parseInt(cell.dataset.c);
-        if (unique.some(p => p.r === cr && p.c === cc)) {
+        if (possible.some(p => p.r === cr && p.c === cc)) {
             cell.classList.add('valid');
             cell.onclick = () => {
                 if (cr === opponentPos.r && cc === opponentPos.c) {
