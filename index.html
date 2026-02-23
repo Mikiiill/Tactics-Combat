@@ -225,63 +225,6 @@ function useReach() {
 
     const possible = [];
 
-    // 1 step orthogonal
-    const adjacent = [[0,1],[0,-1],[1,0],[-1,0]];
-    adjacent.forEach(d => {
-        const nr = playerPos.r + d[0];
-        const nc = playerPos.c + d[1];
-        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-            possible.push({r:nr, c:nc});
-        }
-    });
-
-    // 2 steps straight orthogonal
-    const straight2 = [[0,2],[0,-2],[2,0],[-2,0]];
-    straight2.forEach(d => {
-        const nr = playerPos.r + d[0];
-        const nc = playerPos.c + d[1];
-        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-            possible.push({r:nr, c:nc});
-        }
-    });
-
-    // Short knight L: 1 forward + 1 side (all 8 directions)
-    const shortKnight = [
-        [1,1],[1,-1],[-1,1],[-1,-1],
-        [1,1],[1,-1],[-1,1],[-1,-1] // duplicate to cover all rotations
-    ];
-    shortKnight.forEach(d => {
-        const nr = playerPos.r + d[0];
-        const nc = playerPos.c + d[1];
-        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-            possible.push({r:nr, c:nc});
-        }
-    });
-
-    // Remove duplicates (if any)
-    const unique = [];
-    const seen = new Set();
-    possible.forEach(p => {
-        const key = `\( {p.r}, \){p.c}`;
-        if (!seen.has(key)) {
-            seen.add(key);
-            unique.push(p);
-        }
-    });
-
-    if (unique.length === 0) {
-        alert("No valid Reach targets!");
-        return;
-    }
-
-    document.querySelectorAll('.cell').forEach(cell => {
-function useReach() {
-    if (mana < 2) return;
-    hideSkills();
-
-    const possible = [];
-
-    // 1 step orthogonal (adjacent)
     const adj = [[0,1],[0,-1],[1,0],[-1,0]];
     adj.forEach(d => {
         const nr = playerPos.r + d[0];
@@ -291,7 +234,6 @@ function useReach() {
         }
     });
 
-    // 2 steps straight orthogonal
     const straight2 = [[0,2],[0,-2],[2,0],[-2,0]];
     straight2.forEach(d => {
         const nr = playerPos.r + d[0];
@@ -301,10 +243,10 @@ function useReach() {
         }
     });
 
-    // Short L: 1 orthogonal + 1 side orthogonal (all 8 possible short knight positions)
     const shortL = [
-        [1,1], [1,-1], [-1,1], [-1,-1],
-        [1,1], [1,-1], [-1,1], [-1,-1] // duplicates ensure coverage
+        [1,1],[1,-1],[-1,1],[-1,-1],
+        [2,1],[2,-1],[-2,1],[-2,-1],
+        [1,2],[1,-2],[-1,2],[-1,-2]
     ];
     shortL.forEach(d => {
         const nr = playerPos.r + d[0];
@@ -314,7 +256,6 @@ function useReach() {
         }
     });
 
-    // Remove any duplicates
     const unique = [];
     const seen = new Set();
     possible.forEach(p => {
