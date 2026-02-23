@@ -225,9 +225,9 @@ function useReach() {
 
     const possible = [];
 
-    // Straight 2 squares (up/down/left/right)
-    const straight = [[0,2],[0,-2],[2,0],[-2,0]];
-    straight.forEach(d => {
+    // 1 step orthogonal
+    const adjacent = [[0,1],[0,-1],[1,0],[-1,0]];
+    adjacent.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -235,9 +235,9 @@ function useReach() {
         }
     });
 
-    // Knight moves (1 then orthogonal)
-    const knight = [[1,2],[1,-2],[-1,2],[-1,-2],[2,1],[2,-1],[-2,1],[-2,-1]];
-    knight.forEach(d => {
+    // 2 steps straight orthogonal
+    const straight2 = [[0,2],[0,-2],[2,0],[-2,0]];
+    straight2.forEach(d => {
         const nr = playerPos.r + d[0];
         const nc = playerPos.c + d[1];
         if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
@@ -245,7 +245,31 @@ function useReach() {
         }
     });
 
-    if (possible.length === 0) {
+    // Short knight L: 1 forward + 1 side (all 8 directions)
+    const shortKnight = [
+        [1,1],[1,-1],[-1,1],[-1,-1],
+        [1,1],[1,-1],[-1,1],[-1,-1] // duplicate to cover all rotations
+    ];
+    shortKnight.forEach(d => {
+        const nr = playerPos.r + d[0];
+        const nc = playerPos.c + d[1];
+        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+            possible.push({r:nr, c:nc});
+        }
+    });
+
+    // Remove duplicates (if any)
+    const unique = [];
+    const seen = new Set();
+    possible.forEach(p => {
+        const key = `\( {p.r}, \){p.c}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(p);
+        }
+    });
+
+    if (unique.length === 0) {
         alert("No valid Reach targets!");
         return;
     }
@@ -254,7 +278,7 @@ function useReach() {
         cell.classList.remove('valid');
         const cr = parseInt(cell.dataset.r);
         const cc = parseInt(cell.dataset.c);
-        if (possible.some(p => p.r === cr && p.c === cc)) {
+        if (unique.some(p => p.r === cr && p.c === cc)) {
             cell.classList.add('valid');
             cell.onclick = () => {
                 if (cr === opponentPos.r && cc === opponentPos.c) {
